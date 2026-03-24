@@ -1,0 +1,55 @@
+# ============================================================
+# argocd-app.yaml — Argo CD Application
+# ============================================================
+# Argo CD is a GitOps tool: it watches a Git repo and
+# automatically deploys changes to Kubernetes.
+#
+# When you push a code change:
+#   1. CI builds a new Docker image (e.g., keepstock-router:0.1.1)
+#   2. CI updates the image tag in k8s/deployment.yaml
+#   3. Argo CD detects the change in Git
+#   4. Argo CD applies the new deployment.yaml to Kubernetes
+#   5. Kubernetes rolls out new pods with zero downtime
+#
+# Deploy model updates via GitOps:
+#   git push → Argo CD syncs → new optimizer version live
+#
+# Apply:  kubectl apply -f k8s/argocd-app.yaml
+# ============================================================
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: keepstock-router
+  namespace: argocd
+  # Finalizer ensures Argo CD cleans up resources on delete
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  # The Argo CD project (groups related applications)
+  project: keepstock
+
+  # SOURCE: where to find the Kubernetes manifests
+  source:
+    repoURL: https://github.com/your-org/keepstock-routing-optimizer.git
+    targetRevision: main        # deploy from main branch
+    path: k8s                   # look in the k8s/ directory
+
+  # DESTINATION: where to deploy
+  destination:
+    server: https://kubernetes.default.svc  # in-cluster
+    namespace: keepstock
+
+  # SYNC POLICY: how Argo CD keeps things in sync
+  syncPolicy:
+    automated:
+      prune: true               # delete resources removed from Git
+      selfHeal: true            # revert manual kubectl changes
+    syncOptions:
+      - CreateNamespace=true    # create namespace if it doesn't exist
+    retry:
+      limit: 3
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 1m

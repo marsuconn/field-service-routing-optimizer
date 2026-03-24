@@ -1,0 +1,125 @@
+# ============================================================
+# deployment.yaml — Kubernetes Deployment for KeepStock Router
+# ============================================================
+# This runs the FastAPI re-optimization service (Level 2)
+# as a long-running Kubernetes pod.
+#
+# The Airflow DAG (Level 1) calls this service's /optimize
+# endpoint, and mid-day events call /reoptimize.
+#
+# Apply:  kubectl apply -f k8s/deployment.yaml
+# Check:  kubectl get pods -n keepstock
+# Logs:   kubectl logs -n keepstock deployment/keepstock-router
+# ============================================================
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: keepstock-router
+  namespace: keepstock
+  labels:
+    app: keepstock-router
+    team: routing-optimization
+    managed-by: argocd          # Tells Argo CD this is its resource
+spec:
+  replicas: 2                   # 2 pods for high availability
+  selector:
+    matchLabels:
+      app: keepstock-router
+  template:
+    metadata:
+      labels:
+        app: keepstock-router
+    spec:
+      containers:
+        - name: router
+          image: keepstock-router:0.1.0
+          ports:
+            - containerPort: 8000
+              name: http
+
+          # Resource requests/limits
+          # OR-Tools needs decent CPU for solving
+          resources:
+            requests:
+              cpu: "500m"       # 0.5 CPU cores minimum
+              memory: "512Mi"
+            limits:
+              cpu: "2000m"      # burst up to 2 cores during solve
+              memory: "2Gi"
+
+          # Environment variables
+          # In production: Snowflake creds, API keys, etc.
+          env:
+            - name: ENVIRONMENT
+              value: "production"
+            - name: LOG_LEVEL
+              value: "INFO"
+            - name: SOLVE_TIME_LIMIT
+              value: "30"
+            # Snowflake credentials from Kubernetes Secret
+            - name: SNOWFLAKE_ACCOUNT
+              valueFrom:
+                secretKeyRef:
+                  name: keepstock-secrets
+                  key: snowflake-account
+            - name: SNOWFLAKE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: keepstock-secrets
+                  key: snowflake-password
+
+          # Health checks — Kubernetes uses these to manage the pod
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+
+---
+
+# ============================================================
+# service.yaml — Kubernetes Service (internal load balancer)
+# ============================================================
+# This gives the routing API a stable internal DNS name:
+#   http://keepstock-router-svc.keepstock:8000
+#
+# The Airflow DAG and event triggers call this address.
+# ============================================================
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: keepstock-router-svc
+  namespace: keepstock
+  labels:
+    app: keepstock-router
+spec:
+  selector:
+    app: keepstock-router
+  ports:
+    - port: 8000
+      targetPort: 8000
+      protocol: TCP
+      name: http
+  type: ClusterIP              # Internal only (not exposed to internet)
+
+---
+
+# ============================================================
+# namespace.yaml — Kubernetes Namespace
+# ============================================================
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: keepstock
+  labels:
+    team: routing-optimization
