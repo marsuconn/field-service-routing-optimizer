@@ -1,8 +1,8 @@
 """
-data.py — KeepStock Routing Data for Eastern Massachusetts
+data.py — Field Service Routing Data for Eastern Massachusetts
 ==========================================================
 This module contains sample branch locations (depots) and
-realistic KeepStock customer sites with their attributes.
+realistic Field Service customer sites with their attributes.
 
 In production, this data would come from Snowflake queries.
 Here we hardcode it for demonstration purposes.
@@ -30,7 +30,7 @@ class Depot:
 
 @dataclass
 class Customer:
-    """A KeepStock customer site that needs periodic service visits."""
+    """A Field Service customer site that needs periodic service visits."""
     id: str
     name: str
     lat: float

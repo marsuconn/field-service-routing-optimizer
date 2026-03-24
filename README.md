@@ -1,4 +1,4 @@
-# KeepStock Routing Optimizer
+# Field Service Routing Optimizer
 
 Multi-Depot Capacitated Vehicle Routing Problem with Time Windows (MDCVRPTW) solver for field service operations. Built with Google OR-Tools and deployed as a FastAPI microservice on Kubernetes.
 
@@ -21,7 +21,7 @@ Multi-Depot Capacitated Vehicle Routing Problem with Time Windows (MDCVRPTW) sol
 │                    KUBERNETES CLUSTER                        │
 │                                                             │
 │  ┌──────────────────────────────────────────┐               │
-│  │  keepstock-router (FastAPI)              │               │
+│  │  field-router (FastAPI)              │               │
 │  │  ├── GET  /health      (liveness probe) │               │
 │  │  ├── POST /optimize    (Level 1)        │               │
 │  │  └── POST /reoptimize  (Level 2)        │               │
@@ -38,7 +38,7 @@ Multi-Depot Capacitated Vehicle Routing Problem with Time Windows (MDCVRPTW) sol
 ## Project Structure
 
 ```
-keepstock-routing-optimizer/
+field-service-routing-optimizer/
 ├── Dockerfile                         # Container image definition
 ├── requirements.txt                   # Python dependencies
 ├── data.py                            # Data models, distance utilities, sample data
@@ -50,7 +50,7 @@ keepstock-routing-optimizer/
 │   └── server.py                      # FastAPI service (Level 2 microservice)
 ├── airflow/
 │   └── dags/
-│       └── keepstock_routing_dag.py   # Airflow DAG (Level 1 orchestration)
+│       └── field_service_routing_dag.py   # Airflow DAG (Level 1 orchestration)
 └── k8s/
     ├── deployment.yaml                # Kubernetes Deployment + Service
     └── argocd-app.yaml                # Argo CD Application (GitOps)
@@ -91,9 +91,9 @@ curl -X POST http://localhost:8000/optimize \
 ## Docker
 
 ```bash
-docker build -t keepstock-router:latest .
-docker run keepstock-router:latest python run_auto.py   # batch job
-docker run -p 8000:8000 keepstock-router:latest          # API server
+docker build -t field-router:latest .
+docker run field-router:latest python run_auto.py   # batch job
+docker run -p 8000:8000 field-router:latest          # API server
 ```
 
 ## Key Technologies

@@ -1,5 +1,5 @@
 # ============================================================
-# deployment.yaml — Kubernetes Deployment for KeepStock Router
+# deployment.yaml — Kubernetes Deployment for Field Service Router
 # ============================================================
 # This runs the FastAPI re-optimization service (Level 2)
 # as a long-running Kubernetes pod.
@@ -8,32 +8,32 @@
 # endpoint, and mid-day events call /reoptimize.
 #
 # Apply:  kubectl apply -f k8s/deployment.yaml
-# Check:  kubectl get pods -n keepstock
-# Logs:   kubectl logs -n keepstock deployment/keepstock-router
+# Check:  kubectl get pods -n field-service
+# Logs:   kubectl logs -n field-service deployment/field-router
 # ============================================================
 
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: keepstock-router
-  namespace: keepstock
+  name: field-router
+  namespace: field-service
   labels:
-    app: keepstock-router
+    app: field-router
     team: routing-optimization
     managed-by: argocd          # Tells Argo CD this is its resource
 spec:
   replicas: 2                   # 2 pods for high availability
   selector:
     matchLabels:
-      app: keepstock-router
+      app: field-router
   template:
     metadata:
       labels:
-        app: keepstock-router
+        app: field-router
     spec:
       containers:
         - name: router
-          image: keepstock-router:0.1.0
+          image: field-router:0.1.0
           ports:
             - containerPort: 8000
               name: http
@@ -61,12 +61,12 @@ spec:
             - name: SNOWFLAKE_ACCOUNT
               valueFrom:
                 secretKeyRef:
-                  name: keepstock-secrets
+                  name: field-service-secrets
                   key: snowflake-account
             - name: SNOWFLAKE_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: keepstock-secrets
+                  name: field-service-secrets
                   key: snowflake-password
 
           # Health checks — Kubernetes uses these to manage the pod
@@ -89,7 +89,7 @@ spec:
 # service.yaml — Kubernetes Service (internal load balancer)
 # ============================================================
 # This gives the routing API a stable internal DNS name:
-#   http://keepstock-router-svc.keepstock:8000
+#   http://field-router-svc.field-service:8000
 #
 # The Airflow DAG and event triggers call this address.
 # ============================================================
@@ -97,13 +97,13 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: keepstock-router-svc
-  namespace: keepstock
+  name: field-router-svc
+  namespace: field-service
   labels:
-    app: keepstock-router
+    app: field-router
 spec:
   selector:
-    app: keepstock-router
+    app: field-router
   ports:
     - port: 8000
       targetPort: 8000
@@ -120,6 +120,6 @@ spec:
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: keepstock
+  name: field-service
   labels:
     team: routing-optimization

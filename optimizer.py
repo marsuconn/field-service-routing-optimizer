@@ -129,7 +129,7 @@ def solve_cvrptw(
 
     if verbose:
         print(f"\n{'='*60}")
-        print(f"  KEEPSTOCK ROUTING OPTIMIZER")
+        print(f"  FIELD SERVICE ROUTING OPTIMIZER")
         print(f"{'='*60}")
         print(f"  Customers due today:  {num_customers}")
         print(f"  OSRs available:       {num_osrs}")

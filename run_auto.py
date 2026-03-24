@@ -8,7 +8,7 @@ from pipeline import DailyPipeline, EventReoptimizer
 
 def main():
     print("\n" + "▓" * 60)
-    print("▓▓▓   KEEPSTOCK ROUTING — AUTOMATED DEMO               ▓▓▓")
+    print("▓▓▓   FIELD SERVICE ROUTING — AUTOMATED DEMO               ▓▓▓")
     print("▓" * 60)
 
     # ── Level 1: Morning Pipeline ────────────────

@@ -1,17 +1,17 @@
 # ============================================================
-# Dockerfile — KeepStock Routing Optimizer
+# Dockerfile — Field Service Routing Optimizer
 # ============================================================
 # Packages the optimizer so it runs identically anywhere:
 # your laptop, CI server, or Kubernetes pod.
 #
-# Build:  docker build -t keepstock-router:latest .
-# Run:    docker run keepstock-router:latest python run_auto.py
-# API:    docker run -p 8000:8000 keepstock-router:latest
+# Build:  docker build -t field-router:latest .
+# Run:    docker run field-router:latest python run_auto.py
+# API:    docker run -p 8000:8000 field-router:latest
 # ============================================================
 
 FROM python:3.11-slim
 
-LABEL maintainer="keepstock-routing"
+LABEL maintainer="field-service-routing"
 LABEL version="0.1.0"
 
 RUN apt-get update && apt-get install -y --no-install-recommends \

@@ -14,7 +14,7 @@ Start locally:
     python api/server.py
 
 Start in container:
-    docker run -p 8000:8000 keepstock-router:latest
+    docker run -p 8000:8000 field-router:latest
 
 Test:
     curl http://localhost:8000/health
@@ -47,8 +47,8 @@ from data import Event as DataEvent
 # ──────────────────────────────────────────────
 
 app = FastAPI(
-    title="KeepStock Routing Optimizer",
-    description="MDCVRPTW routing engine for KeepStock service operations",
+    title="Field Service Routing Optimizer",
+    description="MDCVRPTW routing engine for Field Service service operations",
     version="0.1.0",
 )
 
@@ -152,7 +152,7 @@ def solution_to_response(solution) -> SolutionResponse:
 @app.get("/health")
 def health():
     """Kubernetes liveness/readiness probe."""
-    return {"status": "healthy", "service": "keepstock-router", "version": "0.1.0"}
+    return {"status": "healthy", "service": "field-router", "version": "0.1.0"}
 
 
 @app.post("/optimize", response_model=SolutionResponse)
@@ -236,7 +236,7 @@ def reoptimize(req: ReoptimizeRequest):
 # ──────────────────────────────────────────────
 
 if __name__ == "__main__":
-    print("\n  Starting KeepStock Routing API on port 8000...")
+    print("\n  Starting Field Service Routing API on port 8000...")
     print("  Docs: http://localhost:8000/docs")
     print("  Health: http://localhost:8000/health\n")
     uvicorn.run(app, host="0.0.0.0", port=8000)

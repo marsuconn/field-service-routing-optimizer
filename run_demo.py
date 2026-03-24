@@ -1,5 +1,5 @@
 """
-run_demo.py — KeepStock Routing Demo
+run_demo.py — Field Service Routing Demo
 =====================================
 Run this file to see both Level 1 and Level 2 in action.
 
@@ -24,7 +24,7 @@ def main():
     # ══════════════════════════════════════════════
 
     print("\n" + "▓" * 60)
-    print("▓▓▓   KEEPSTOCK ROUTING SYSTEM — FULL DEMO              ▓▓▓")
+    print("▓▓▓   FIELD SERVICE ROUTING SYSTEM — FULL DEMO              ▓▓▓")
     print("▓▓▓   Eastern Massachusetts Region                      ▓▓▓")
     print("▓" * 60)
 

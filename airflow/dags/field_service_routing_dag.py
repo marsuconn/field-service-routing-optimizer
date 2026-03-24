@@ -1,5 +1,5 @@
 """
-keepstock_routing_dag.py — Airflow DAG for Daily Routing
+field_service_routing_dag.py — Airflow DAG for Daily Routing
 ========================================================
 This DAG runs every weekday at 5:00 AM ET on Astronomer (managed Airflow).
 It orchestrates the Level 1 morning pipeline:
@@ -12,7 +12,7 @@ Astronomer setup:
     3. Deploy via: astro deploy
 
 Uses Astronomer (managed Airflow) + Argo CD (GitOps deploys).
-This DAG would be one of several DAGs in the KeepStock MLOps platform.
+This DAG would be one of several DAGs in the Field Service MLOps platform.
 """
 
 from datetime import datetime, timedelta
@@ -30,7 +30,7 @@ import json
 # ──────────────────────────────────────────────
 
 default_args = {
-    "owner": "keepstock-routing",            # Team ownership
+    "owner": "field-service-routing",            # Team ownership
     "depends_on_past": False,                # Each day runs independently
     "email": ["routing-alerts@example.com"],
     "email_on_failure": True,
@@ -41,9 +41,9 @@ default_args = {
 }
 
 dag = DAG(
-    dag_id="keepstock_daily_routing",
+    dag_id="field-service_daily_routing",
     default_args=default_args,
-    description="Daily MDCVRPTW route optimization for KeepStock OSRs",
+    description="Daily MDCVRPTW route optimization for Field Service OSRs",
     # ┌───── minute (0)
     # │ ┌─── hour (5 AM)
     # │ │ ┌─ day of month (any)
@@ -52,16 +52,16 @@ dag = DAG(
     schedule_interval="0 5 * * 1-5",
     start_date=datetime(2026, 3, 1),
     catchup=False,                           # Don't backfill past dates
-    tags=["keepstock", "routing", "optimization"],
+    tags=["field-service", "routing", "optimization"],
     doc_md="""
-    ## KeepStock Daily Routing Pipeline
+    ## Field Service Daily Routing Pipeline
     
     Runs every weekday at 5:00 AM ET. Produces optimized routes
     for all OSRs and pushes them to the mobile app before 7:00 AM.
     
     **Owner:** Routing & Inventory Optimization team  
-    **Slack:** #keepstock-routing  
-    **Runbook:** https://wiki.example.com/keepstock/routing-runbook
+    **Slack:** #field-service-routing  
+    **Runbook:** https://wiki.example.com/field-service/routing-runbook
     """,
 )
 
@@ -78,12 +78,12 @@ def extract_data(**context):
     
         from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
         
-        hook = SnowflakeHook(snowflake_conn_id="snowflake_keepstock")
+        hook = SnowflakeHook(snowflake_conn_id="snowflake_field-service")
         customers = hook.get_pandas_df('''
             SELECT c.id, c.name, c.lat, c.lon, c.service_min, c.demand,
                    c.window_open, c.window_close, c.priority
-            FROM keepstock.visit_schedule vs
-            JOIN keepstock.customers c ON c.id = vs.customer_id
+            FROM field-service.visit_schedule vs
+            JOIN field-service.customers c ON c.id = vs.customer_id
             WHERE vs.visit_date = CURRENT_DATE()
         ''')
     
@@ -125,7 +125,7 @@ def optimize_routes(**context):
     In production, this calls the FastAPI service:
     
         response = requests.post(
-            "http://keepstock-router-svc:8000/optimize",
+            "http://field-router-svc:8000/optimize",
             json={"day_of_week": day, "time_limit_sec": 30}
         )
     
@@ -134,9 +134,9 @@ def optimize_routes(**context):
     
         KubernetesPodOperator(
             task_id="optimize",
-            image="keepstock-router:latest",
+            image="field-router:latest",
             cmds=["python", "run_auto.py"],
-            namespace="keepstock",
+            namespace="field-service",
             ...
         )
     """
@@ -182,12 +182,12 @@ def dispatch_routes(**context):
     In production:
         for route in solution.routes:
             requests.post(
-                "https://keepstock-app.example.com/api/routes",
+                "https://field-service-app.example.com/api/routes",
                 json={"osr_id": route.osr_id, "stops": route.stops, ...}
             )
     
     Also writes the solution to Snowflake for analytics:
-        INSERT INTO keepstock.route_history (date, osr_id, route_json, ...)
+        INSERT INTO field-service.route_history (date, osr_id, route_json, ...)
     """
     solution = context["ti"].xcom_pull(key="solution")
     print(f"Dispatching routes: {solution['customers_served']} stops across 4 OSRs")
@@ -209,7 +209,7 @@ dispatch_task = PythonOperator(
 def monitor_quality(**context):
     """
     Check solution quality and alert if anomalies detected.
-    Sends Slack notification to #keepstock-routing.
+    Sends Slack notification to #field-service-routing.
     """
     solution = context["ti"].xcom_pull(key="solution")
     alerts = []
@@ -245,11 +245,11 @@ monitor_task = PythonOperator(
 #
 # notify_slack = SlackWebhookOperator(
 #     task_id="notify_slack",
-#     slack_webhook_conn_id="slack_keepstock",
-#     message="✅ KeepStock routes dispatched for {{ ds }}. "
+#     slack_webhook_conn_id="slack_field-service",
+#     message="✅ Field Service routes dispatched for {{ ds }}. "
 #             "{{ ti.xcom_pull(key='solution')['customers_served'] }} "
 #             "customers served.",
-#     channel="#keepstock-routing",
+#     channel="#field-service-routing",
 #     dag=dag,
 # )
 

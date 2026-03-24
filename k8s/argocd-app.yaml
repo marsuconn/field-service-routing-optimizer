@@ -5,7 +5,7 @@
 # automatically deploys changes to Kubernetes.
 #
 # When you push a code change:
-#   1. CI builds a new Docker image (e.g., keepstock-router:0.1.1)
+#   1. CI builds a new Docker image (e.g., field-router:0.1.1)
 #   2. CI updates the image tag in k8s/deployment.yaml
 #   3. Argo CD detects the change in Git
 #   4. Argo CD applies the new deployment.yaml to Kubernetes
@@ -20,25 +20,25 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: keepstock-router
+  name: field-router
   namespace: argocd
   # Finalizer ensures Argo CD cleans up resources on delete
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
   # The Argo CD project (groups related applications)
-  project: keepstock
+  project: field-service
 
   # SOURCE: where to find the Kubernetes manifests
   source:
-    repoURL: https://github.com/your-org/keepstock-routing-optimizer.git
+    repoURL: https://github.com/your-org/field-service-routing-optimizer.git
     targetRevision: main        # deploy from main branch
     path: k8s                   # look in the k8s/ directory
 
   # DESTINATION: where to deploy
   destination:
     server: https://kubernetes.default.svc  # in-cluster
-    namespace: keepstock
+    namespace: field-service
 
   # SYNC POLICY: how Argo CD keeps things in sync
   syncPolicy:

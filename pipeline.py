@@ -67,16 +67,16 @@ class DailyPipeline:
         In production, this would run SQL queries:
         
             -- Get customers due today from Layer 1 frequency model
-            SELECT c.* FROM keepstock.customers c
-            JOIN keepstock.visit_schedule vs ON c.id = vs.customer_id
+            SELECT c.* FROM field-service.customers c
+            JOIN field-service.visit_schedule vs ON c.id = vs.customer_id
             WHERE vs.visit_date = CURRENT_DATE();
             
             -- Get OSR availability from HR system
-            SELECT * FROM keepstock.osr_availability
+            SELECT * FROM field-service.osr_availability
             WHERE work_date = CURRENT_DATE() AND is_available = TRUE;
             
             -- Get any overnight alerts (machine jams, stockouts)
-            SELECT * FROM keepstock.machine_alerts
+            SELECT * FROM field-service.machine_alerts
             WHERE alert_time > DATEADD(hour, -12, CURRENT_TIMESTAMP())
             AND resolved = FALSE;
         """
@@ -108,10 +108,10 @@ class DailyPipeline:
         
         In production, this runs in a Docker container on Kubernetes:
         
-            docker run keepstock-optimizer:latest \
+            docker run field-service-optimizer:latest \
                 --date 2026-03-24 \
                 --time-limit 30 \
-                --config /etc/keepstock/optimizer.yaml
+                --config /etc/field-service/optimizer.yaml
         """
         self.log("OPTIMIZE", "Running MDCVRPTW solver...")
 
@@ -207,7 +207,7 @@ class DailyPipeline:
         if alerts:
             for alert in alerts:
                 self.log("MONITOR", f"  {alert}")
-            self.log("MONITOR", f"  → Would send Slack alert to #keepstock-routing")
+            self.log("MONITOR", f"  → Would send Slack alert to #field-service-routing")
         else:
             self.log("MONITOR", "  ✓ All checks passed")
 
@@ -220,7 +220,7 @@ class DailyPipeline:
         In Airflow, this would be a DAG:
         
             @dag(schedule="0 5 * * 1-5")  # 5:00 AM Mon-Fri
-            def keepstock_daily_routing():
+            def field-service_daily_routing():
                 data = extract_data()
                 solution = optimize(data)
                 dispatch(solution)
@@ -270,7 +270,7 @@ class EventReoptimizer:
             # Push updated routes to phones
             
     Triggered by:
-        - KeepStock telemetry (machine jam alert)
+        - Field Service telemetry (machine jam alert)
         - HR system (OSR absence)
         - Dispatcher manual input (emergency restock)
         - Message queue (Kafka/SQS)
